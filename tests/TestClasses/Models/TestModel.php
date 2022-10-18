@@ -17,6 +17,11 @@ class TestModel extends Model
 
     protected $guarded = [];
 
+    public function relatedSoftDeleteModels(): HasMany
+    {
+        return $this->hasMany(RelatedSoftDeleteModel::class);
+    }
+
     public function relatedModels(): HasMany
     {
         return $this->hasMany(RelatedModel::class);

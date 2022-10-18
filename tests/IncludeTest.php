@@ -7,11 +7,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\Exceptions\InvalidIncludeQuery;
-use Spatie\QueryBuilder\Includes\IncludedCount;
 use Spatie\QueryBuilder\Includes\IncludeInterface;
+use Spatie\QueryBuilder\Includes\IncludedCount;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\Tests\TestClasses\Models\MorphModel;
+use Spatie\QueryBuilder\Tests\TestClasses\Models\RelatedSoftDeleteModel;
 use Spatie\QueryBuilder\Tests\TestClasses\Models\TestModel;
+
+use function PHPUnit\Framework\assertGreaterThan;
+use function PHPUnit\Framework\assertNotEmpty;
 
 beforeEach(function () {
     $this->models = TestModel::factory()->count(5)->create();
@@ -265,6 +269,32 @@ it('can alias multiple allowed includes', function () {
     assertRelationLoaded($models, 'otherRelatedModels');
     $models->each(function ($model) {
         $this->assertNotNull($model->related_models_count);
+    });
+});
+
+it('can include count with related soft-deleted model', function () {
+    $testModel = TestModel::factory()->create();
+    RelatedSoftDeleteModel::factory()->count(1)->for($testModel)->state([
+        'deleted_at' => now(),
+    ])->create();
+
+    $request = new Request([
+        'include' => 'relatedSoftDeleteModelsCount',
+    ]);
+
+    $models = QueryBuilder::for(
+        TestModel::query()->has(relation: 'relatedSoftDeleteModels', callback: fn ($query) => $query->withTrashed()),
+        $request
+    )
+        ->allowedIncludes([
+            AllowedInclude::count(name: 'relatedSoftDeleteModelsCount', withTrashed: true),
+        ])
+        ->get();
+
+    assertNotEmpty($models, 'No test models found');
+
+    $models->each(function ($model) {
+        assertGreaterThan(0, $model->related_soft_delete_models_count);
     });
 });
 
