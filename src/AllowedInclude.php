@@ -4,9 +4,9 @@ namespace Spatie\QueryBuilder;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Spatie\QueryBuilder\Includes\IncludeInterface;
 use Spatie\QueryBuilder\Includes\IncludedCount;
 use Spatie\QueryBuilder\Includes\IncludedRelationship;
-use Spatie\QueryBuilder\Includes\IncludeInterface;
 
 class AllowedInclude
 {
@@ -52,10 +52,10 @@ class AllowedInclude
             });
     }
 
-    public static function count(string $name, ?string $internalName = null): Collection
+    public static function count(string $name, ?string $internalName = null, bool $withTrashed = false): Collection
     {
         return collect([
-            new static($name, new IncludedCount(), $internalName),
+            new static($name, new IncludedCount($withTrashed), $internalName),
         ]);
     }
 
