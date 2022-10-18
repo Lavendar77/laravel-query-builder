@@ -72,8 +72,18 @@ $users = QueryBuilder::for(User::class)
     ->allowedIncludes([
         'posts', // allows including `posts` or `postsCount`
         AllowedInclude::count('friendsCount'), // only allows include the number of `friends()` related models
-    ]); 
+    ]);
 // every user in $users will contain a `posts_count` and `friends_count` property
+```
+
+In cases where your related model may be soft-deleted, Laravel's `withCount()` will exclude soft-deleted records by adding `where ... and deleted_at is null` to the SQL query. However, if you wish to include them, you can pass an additional parameter to the `AllowedInclude::count()`:
+
+```php
+...
+// > PHP 8 Named Arguments
+AllowedInclude::count(name: 'friendsCount', withTrashed: true), // includes the number of `friends()` related models (soft-deleted or not)
+
+AllowedIncludes::count('friendsCount', null, true),
 ```
 
 ## Custom includes
